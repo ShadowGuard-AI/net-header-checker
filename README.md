@@ -1,3 +1,5 @@
+![Banner](banner.png)
+
 # net-header-checker
 Inspects HTTP headers of a given URL, identifying security-related headers (e.g., HSTS, X-Frame-Options) and reporting on their presence and configuration. - Focused on Basic network operations
 
