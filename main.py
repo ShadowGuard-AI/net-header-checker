@@ -32,6 +32,9 @@ def validate_url(url):
     """
     try:
         result = requests.utils.urlparse(url)
+        # This is a shape check only. A non HTTP scheme with a netloc passes
+        # here and fails later inside requests, and an uppercase scheme is
+        # left for requests to sort out as well.
         return all([result.scheme, result.netloc])  # Check for scheme (http/https) and netloc (domain)
     except:
         return False
@@ -50,6 +53,9 @@ def check_http_headers(url, timeout=10):
     try:
         # Send an HTTP GET request to the specified URL
         response = requests.get(url, timeout=timeout, allow_redirects=True)
+        # raise_for_status means a 4xx or 5xx answer returns None below, even
+        # though the server did send headers. Error pages are exactly where
+        # missing headers hurt, so I know this understates those servers.
         response.raise_for_status()  # Raise HTTPError for bad responses (4xx or 5xx)
 
         headers = response.headers
@@ -71,6 +77,10 @@ def analyze_security_headers(headers):
     Returns:
         dict: A dictionary containing analysis results for security headers.
     """
+    # What follows records presence and echoes the value. I never grade
+    # the value, so HSTS with max-age=0 sits in the report looking the
+    # same as a one year policy. The requests header dict is case
+    # insensitive, which is the only reason the literal names work.
     security_header_results = {}
 
     # HSTS (HTTP Strict Transport Security)
@@ -150,6 +160,9 @@ def main():
         else:
             logging.error("Failed to retrieve headers.")
             sys.exit(1)
+    # This handler is dead in practice. Requests wraps its timeouts in
+    # RequestException, which check_http_headers already caught, so a slow
+    # server surfaces as a failed retrieval, never as this message.
     except socket.timeout:
         logging.error(f"Timeout occurred after {args.timeout} seconds.  The server may be down or slow to respond.")
         sys.exit(1)
